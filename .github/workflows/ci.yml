@@ -1,4 +1,4 @@
-name: CI and GitOps Trigger
+name: CI/CD GitOps Pipeline
 
 on:
   push:
@@ -17,20 +17,20 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push
+      - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }} .
-          docker push ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }}
+          docker build --platform linux/amd64 -t dukuly99/my-app:${{ github.sha }} .
+          docker push dukuly99/my-app:${{ github.sha }}
 
-      - name: Update Manifest Repo
+      - name: Update Manifest Repository
         run: |
           git config --global user.email "gitops-bot@example.com"
           git config --global user.name "GitOps Bot"
-          # Clone the manifest repo using the PAT secret
-          git clone https://x-access-token:${{ secrets.MANIFEST_REPO_TOKEN }}@github.com/your-github-username/manifest-repo.git
+          # Clones your manifest repository
+          git clone https://x-access-token:${{ secrets.MANIFEST_REPO_TOKEN }}@github.com/${{ github.repository_owner }}/manifest-repo.git
           cd manifest-repo
-          # Update the image tag in deployment.yaml
-          sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }}|g" deployment.yaml
-          git add .
+          # Updates the image tag in deployment.yaml
+          sed -i "s|image: .*|image: dukuly99/my-app:${{ github.sha }}|g" deployment.yaml
+          git add deployment.yaml
           git commit -m "Update image to ${{ github.sha }}"
           git push
